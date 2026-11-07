@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YSSE Task Portal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --green:#1E8E3E;       /* main YSSE green: change this one line to match exactly */
+    --green-dark:#14692d;
+    --green-light:#e7f5ec;
+    --ink:#1b2a21;
+    --muted:#5c6b62;
+    --line:#d9e4dc;
+    --bg:#f6faf7;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  header{background:var(--green);color:#fff;padding:14px 16px}
+  .wrap{max-width:960px;margin:0 auto;padding:0 16px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:46px;height:46px;border-radius:50%;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;overflow:hidden;flex:none}
+  .logo img{width:100%;height:100%;object-fit:cover}
+  .brand h1{font-size:18px;margin:0}
+  .brand p{margin:0;font-size:12px;opacity:.9}
+  nav{background:var(--green-dark)}
+  nav .wrap{display:flex;gap:4px;overflow-x:auto}
+  nav button{background:none;border:0;color:#d6efdd;padding:12px 14px;font-size:15px;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent}
+  nav button.on{color:#fff;border-bottom-color:#fff;font-weight:600}
+  main{padding:20px 0 40px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+  h2{margin:0 0 12px;font-size:20px;color:var(--green-dark)}
+  label{display:block;font-size:14px;font-weight:600;margin:12px 0 4px}
+  input,textarea,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+  input:focus,textarea:focus,select:focus{outline:2px solid var(--green);border-color:var(--green)}
+  textarea{min-height:100px;resize:vertical}
+  .btn{background:var(--green);color:#fff;border:0;padding:12px 18px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;margin-top:14px}
+  .btn:hover{background:var(--green-dark)}
+  .btn.light{background:var(--green-light);color:var(--green-dark)}
+  .btn.red{background:#fde8e8;color:#a32020}
+  .btn.small{padding:6px 10px;margin:0;font-size:13px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:600px){.row{grid-template-columns:1fr}}
+  .msg{padding:10px 12px;border-radius:8px;margin-top:12px;font-size:14px;display:none}
+  .msg.ok{display:block;background:var(--green-light);color:var(--green-dark)}
+  .msg.err{display:block;background:#fde8e8;color:#a32020}
+  .item{border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px}
+  .item h3{margin:0 0 4px;font-size:16px}
+  .item small{color:var(--muted)}
+  .tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600}
+  .Pending{background:#fff3cd;color:#8a6d00}
+  .Approved{background:var(--green-light);color:var(--green-dark)}
+  .Needs-revision{background:#fde8e8;color:#a32020}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+  .stat{background:var(--green-light);border-radius:10px;padding:12px;text-align:center}
+  .stat b{display:block;font-size:24px;color:var(--green-dark)}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.charts{grid-template-columns:1fr}}
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  .profile{display:flex;gap:14px;align-items:center;background:var(--green-light);border-radius:12px;padding:14px;margin-top:14px}
+  .avatar{width:56px;height:56px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;flex:none}
+  .profile h3{margin:0;font-size:18px}
+  .profile small{color:var(--muted)}
+  .pstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+  .pstats div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center;font-size:12px;color:var(--muted)}
+  .pstats b{display:block;font-size:20px;color:var(--green-dark)}
+  @media(max-width:500px){.pstats{grid-template-columns:repeat(2,1fr)}}
+  .journey{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  @media(max-width:500px){.journey{grid-template-columns:repeat(2,1fr)}}
+  .jt{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;background:#fff}
+  .jt b{display:block;font-size:15px;margin-bottom:2px}
+  .jt.none{background:#f2f4f3;color:var(--muted)}
+  .jt.Approved{background:var(--green-light);border-color:var(--green)}
+  .bar{height:10px;background:#fff;border-radius:99px;overflow:hidden;margin-top:10px;border:1px solid var(--line)}
+  .bar i{display:block;height:100%;background:var(--green)}
+  .fb{background:var(--bg);border-left:3px solid var(--green);padding:8px 10px;border-radius:6px;font-size:14px;margin:8px 0}
+  .mini{width:70px}
+  .hide{display:none}
+  footer{text-align:center;color:var(--muted);font-size:13px;padding:20px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap brand">
+    <!-- To use the real logo: save it as logo.png next to this file, then replace the text YSSE below with: <img src="logo.png" alt="YSSE"> -->
+    <div class="logo">YSSE</div>
+    <div>
+      <h1>YSSE Task Portal</h1>
+      <p>Youth School for Social Entrepreneurs · Virtual Internship</p>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="wrap">
+    <button class="on" data-tab="submit">Submit task</button>
+    <button data-tab="track">Track my tasks</button>
+    <button data-tab="admin">Admin</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <!-- SUBMIT -->
+  <section id="submit" class="card">
+    <h2>Submit your task</h2>
+    <div class="row">
+      <div><label>Full name</label><input id="s_name" placeholder="Your name"></div>
+      <div><label>Intern ID</label><input id="s_id" placeholder="6-digit ID, e.g. 123456" inputmode="numeric" maxlength="6"></div>
+    </div>
+    <div class="row">
+      <div><label>Email (use the same email every time)</label><input id="s_email" type="email" placeholder="you@email.com"></div>
+      <div><label>Task number</label>
+        <select id="s_task">
+          <option>Task 01</option><option>Task 02</option><option>Task 03</option>
+          <option>Task 04</option><option selected>Task 05</option><option>Task 06</option>
+        </select>
+      </div>
+    </div>
+    <label>Submission link (Drive, GitHub, live site)</label>
+    <input id="s_link" placeholder="https://...">
+    <label>Short description</label>
+    <textarea id="s_desc" placeholder="What did you do?"></textarea>
+    <button class="btn" id="s_btn">Submit task</button>
+    <div id="s_msg" class="msg"></div>
+  </section>
+
+  <!-- TRACK -->
+  <section id="track" class="card hide">
+    <h2>My internship journey</h2>
+    <label>Enter 6-digit Intern ID</label>
+    <input id="t_id" placeholder="e.g. 123456" inputmode="numeric" maxlength="6">
+    <label>Your email (the one you used when submitting)</label>
+    <input id="t_email" type="email" placeholder="you@email.com">
+    <button class="btn" id="t_btn">Show my profile</button>
+    <div id="t_msg" class="msg"></div>
+    <div id="t_profile"></div>
+    <div id="t_list"></div>
+  </section>
+
+  <!-- ADMIN -->
+  <section id="admin" class="hide">
+    <div id="login" class="card">
+      <h2>Admin login</h2>
+      <label>Email</label><input id="a_email" type="email">
+      <label>Password</label><input id="a_pass" type="password">
+      <button class="btn" id="a_login">Log in</button>
+      <div id="a_msg" class="msg"></div>
+    </div>
+
+    <div id="dash" class="hide">
+      <div class="card">
+        <h2>Dashboard</h2>
+        <div class="stats">
+          <div class="stat"><b id="n_total">0</b>Total</div>
+          <div class="stat"><b id="n_pending">0</b>Pending</div>
+          <div class="stat"><b id="n_approved">0</b>Approved</div>
+          <div class="stat"><b id="n_avg">–</b>Avg marks</div>
+        </div>
+        <div class="charts">
+          <div><canvas id="chartStatus"></canvas></div>
+          <div><canvas id="chartTask"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>All submissions</h2>
+        <input id="a_filter" placeholder="Filter by 6-digit Intern ID or name">
+        <div class="tablewrap" style="margin-top:12px">
+          <table>
+            <thead><tr><th>Intern</th><th>Task</th><th>Link</th><th>Status</th><th>Marks /100</th><th>Feedback</th><th></th></tr></thead>
+            <tbody id="a_rows"></tbody>
+          </table>
+        </div>
+        <button class="btn light" id="a_logout">Log out</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+<footer>© YSSE · Youth School for Social Entrepreneurs</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, updateDoc, deleteDoc, doc, serverTimestamp, onSnapshot }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  /* ======= STEP: PASTE YOUR FIREBASE CONFIG HERE (replace everything between the braces) ======= */
+  const firebaseConfig = {
+    apiKey: "PASTE_HERE",
+    authDomain: "PASTE_HERE",
+    projectId: "PASTE_HERE",
+    storageBucket: "PASTE_HERE",
+    messagingSenderId: "PASTE_HERE",
+    appId: "PASTE_HERE"
+  };
+  /* ============================================================================================= */
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  const subs = collection(db, "submissions");
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const show = (el, text, type) => { el.className = "msg " + type; el.textContent = text; };
+  const cls = s => s.replace(" ", "-");
+
+  /* Tabs */
+  document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+    document.querySelectorAll("nav button").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+    ["submit","track","admin"].forEach(t => $(t).classList.toggle("hide", t !== b.dataset.tab));
+  });
+
+  /* Submit a task */
+  $("s_btn").onclick = async () => {
+    const data = {
+      name: $("s_name").value.trim(),
+      internId: $("s_id").value.trim(),
+      email: $("s_email").value.trim(),
+      task: $("s_task").value,
+      link: $("s_link").value.trim(),
+      description: $("s_desc").value.trim(),
+      status: "Pending",
+      marks: null,
+      feedback: "",
+      createdAt: serverTimestamp()
+    };
+    if (!/^\d{6}$/.test(data.internId)) return show($("s_msg"), "Intern ID must be exactly 6 digits.", "err");
+    if (!data.name || !data.link || !data.email) return show($("s_msg"), "Please fill in your name, email and submission link.", "err");
+    try {
+      $("s_btn").disabled = true;
+      await addDoc(subs, data);
+      show($("s_msg"), "Task submitted. Use your Intern ID in the Track tab to see its status.", "ok");
+      ["s_name","s_id","s_email","s_link","s_desc"].forEach(i => $(i).value = "");
+    } catch (e) {
+      show($("s_msg"), "Could not submit: " + e.message, "err");
+    }
+    $("s_btn").disabled = false;
+  };
+
+  /* Track by Intern ID: shows profile + all work */
+  const TOTAL_TASKS = 6; // change this number if your internship has more or fewer tasks
+  async function loadProfile(id, email) {
+    $("t_list").innerHTML = ""; $("t_profile").innerHTML = "";
+    if (!/^\d{6}$/.test(id)) return show($("t_msg"), "Intern ID must be exactly 6 digits.", "err");
+    if (!email) return show($("t_msg"), "Please enter your email.", "err");
+    try {
+      const snap = await getDocs(query(subs, where("internId", "==", id)));
+      const items = snap.docs.map(d => d.data())
+        .filter(x => (x.email || "").toLowerCase() === email.toLowerCase())
+        .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+      if (!items.length) return show($("t_msg"), "No profile found. Check your ID and email, or submit your first task.", "err");
+      $("t_msg").className = "msg";
+      const first = items[items.length - 1];
+      const marked = items.filter(s => typeof s.marks === "number");
+      const avg = marked.length ? Math.round(marked.reduce((t,s) => t + s.marks, 0) / marked.length) : "–";
+      const approved = items.filter(s => s.status === "Approved").length;
+      const doneTasks = new Set(items.map(s => s.task));
+      const pct = Math.round(doneTasks.size / TOTAL_TASKS * 100);
+      const journey = Array.from({length: TOTAL_TASKS}, (_, i) => {
+        const name = "Task " + String(i + 1).padStart(2, "0");
+        const sub = items.find(x => x.task === name);
+        if (!sub) return `<div class="jt none"><b>${name}</b>Not submitted</div>`;
+        return `<div class="jt ${cls(sub.status)}"><b>${name}</b>${esc(sub.status)}${typeof sub.marks === "number" ? " · " + sub.marks + "/100" : ""}</div>`;
+      }).join("");
+      $("t_profile").innerHTML = `
+        <div class="profile">
+          <div class="avatar">${esc((first.name||"?").charAt(0).toUpperCase())}</div>
+          <div><h3>${esc(first.name)}</h3><small>Intern ID ${esc(id)} · ${esc(first.email)}</small></div>
+        </div>
+        <div class="pstats">
+          <div><b>${doneTasks.size}/${TOTAL_TASKS}</b>Tasks submitted</div>
+          <div><b>${approved}</b>Approved</div>
+          <div><b>${items.length - approved}</b>In progress</div>
+          <div><b>${avg}</b>Average marks</div>
+        </div>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+        <small>${pct}% of your internship tasks submitted</small>
+        <div class="journey">${journey}</div>
+        <h2 style="margin-top:18px">All my submissions</h2>`;
+      $("t_list").innerHTML = items.map(s => `
+        <div class="item">
+          <h3>${esc(s.task)} <span class="tag ${cls(s.status)}">${esc(s.status)}</span></h3>
+          <small>${s.createdAt ? new Date(s.createdAt.seconds*1000).toLocaleDateString() : ""}${typeof s.marks === "number" ? " · Marks: <b>" + s.marks + "/100</b>" : " · Not marked yet"}</small>
+          <p>${esc(s.description)}</p>
+          ${s.feedback ? `<div class="fb"><b>Feedback:</b> ${esc(s.feedback)}</div>` : ""}
+          <a href="${esc(s.link)}" target="_blank" rel="noopener">Open submission</a>
+        </div>`).join("");
+    } catch (e) {
+      show($("t_msg"), "Search failed: " + e.message, "err");
+    }
+  }
+  $("t_btn").onclick = () => loadProfile($("t_id").value.trim(), $("t_email").value.trim());
+  $("t_email").addEventListener("keydown", e => { if (e.key === "Enter") loadProfile($("t_id").value.trim(), $("t_email").value.trim()); });
+
+  /* Admin login */
+  $("a_login").onclick = async () => {
+    try { await signInWithEmailAndPassword(auth, $("a_email").value, $("a_pass").value); }
+    catch (e) { show($("a_msg"), "Login failed. Check email and password.", "err"); }
+  };
+  $("a_logout").onclick = () => signOut(auth);
+
+  let all = [], charts = {}, unsub = null;
+
+  onAuthStateChanged(auth, user => {
+    $("login").classList.toggle("hide", !!user);
+    $("dash").classList.toggle("hide", !user);
+    if (unsub) { unsub(); unsub = null; }
+    if (user) {
+      unsub = onSnapshot(query(subs, orderBy("createdAt", "desc")), snap => {
+        all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        render();
+      });
+    }
+  });
+
+  $("a_filter").oninput = render;
+
+  function render() {
+    const f = $("a_filter").value.trim().toLowerCase();
+    const list = all.filter(s => !f || (s.internId||"").toLowerCase().includes(f) || (s.name||"").toLowerCase().includes(f));
+    $("a_rows").innerHTML = list.map(s => `
+      <tr>
+        <td><b>${esc(s.internId)}</b><br><small>${esc(s.name)}</small></td>
+        <td>${esc(s.task)}</td>
+        <td><a href="${esc(s.link)}" target="_blank" rel="noopener">Open</a></td>
+        <td>
+          <select data-id="${s.id}" class="st">
+            ${["Pending","Approved","Needs revision"].map(o => `<option ${o===s.status?"selected":""}>${o}</option>`).join("")}
+          </select>
+        </td>
+        <td><input class="mini mk" type="number" min="0" max="100" data-id="${s.id}" value="${typeof s.marks === "number" ? s.marks : ""}"></td>
+        <td><input class="fbk" data-id="${s.id}" placeholder="Write feedback" value="${esc(s.feedback)}"></td>
+        <td><button class="btn red small" data-del="${s.id}">Delete</button></td>
+      </tr>`).join("") || `<tr><td colspan="7">No submissions yet.</td></tr>`;
+
+    document.querySelectorAll(".st").forEach(sel => sel.onchange = () => updateDoc(doc(db, "submissions", sel.dataset.id), { status: sel.value }));
+    document.querySelectorAll(".mk").forEach(i => i.onchange = () => {
+      const v = i.value === "" ? null : Math.max(0, Math.min(100, Number(i.value)));
+      updateDoc(doc(db, "submissions", i.dataset.id), { marks: v });
+    });
+    document.querySelectorAll(".fbk").forEach(i => i.onchange = () => updateDoc(doc(db, "submissions", i.dataset.id), { feedback: i.value.trim() }));
+    document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { if (confirm("Delete this submission?")) deleteDoc(doc(db, "submissions", b.dataset.del)); });
+
+    $("n_total").textContent = all.length;
+    $("n_pending").textContent = all.filter(s => s.status === "Pending").length;
+    $("n_approved").textContent = all.filter(s => s.status === "Approved").length;
+    const mk = all.filter(s => typeof s.marks === "number");
+    $("n_avg").textContent = mk.length ? Math.round(mk.reduce((t,s) => t + s.marks, 0) / mk.length) : "–";
+    drawCharts();
+  }
+
+  function drawCharts() {
+    const count = (key, labels) => labels.map(l => all.filter(s => s[key] === l).length);
+    const statuses = ["Pending","Approved","Needs revision"];
+    const tasks = ["Task 01","Task 02","Task 03","Task 04","Task 05","Task 06"];
+    Object.values(charts).forEach(c => c.destroy());
+    charts.a = new Chart($("chartStatus"), {
+      type: "doughnut",
+      data: { labels: statuses, datasets: [{ data: count("status", statuses), backgroundColor: ["#f2c94c","#1E8E3E","#e57373"] }] },
+      options: { plugins: { title: { display: true, text: "Submissions by status" } } }
+    });
+    charts.b = new Chart($("chartTask"), {
+      type: "bar",
+      data: { labels: tasks, datasets: [{ label: "Submissions", data: count("task", tasks), backgroundColor: "#1E8E3E" }] },
+      options: { plugins: { legend: { display: false }, title: { display: true, text: "Submissions by task" } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+  }
+</script>
+</body>
+</html>
